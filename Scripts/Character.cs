@@ -9,7 +9,8 @@ public class Character : MonoBehaviour, IHover
 	public int maxHealth;
 	public int currentHealth;
 	public int moveTiles;
-	
+
+	public bool moveGridSpawned;
 
 	#region IHover implementation
 	public void OnMouseEnter ()
@@ -29,3 +30,4 @@ public class Character : MonoBehaviour, IHover
 	}
 	#endregion
 }
+

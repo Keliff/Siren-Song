@@ -18,7 +18,8 @@ public class Map : MonoBehaviour {
 	private void Awake()
 	{
 		// Need to instantiate the Dictionary
-		Globals.TileList = new Dictionary< Vector2, GameObject>();
+//		Globals.TileList = new Dictionary< Vector2, GameObject>();
+		Globals.InstantiateDictionaries();
 		Globals.SetParentObjects();
 		Globals.Controls.SetDefaultControls();
 	}
@@ -33,6 +34,7 @@ public class Map : MonoBehaviour {
 //		Globals.spriteWidth = ;
 //		Spawner.instance.SpawnPrefabInLine( "Tile", new Vector2(0, 0), Globals.NORTH, 3, Globals.TileHost );
 //		Spawner.instance.SpawnPrefabInDiamondGrid( "Tile", new Vector2( -1, -4 ), 3, Globals.TileHost, 0.5f );
+//		Spawner.instance.SpawnPrefabInDiagonalCross( "Tile", Vector2.zero, 5, Globals.TileHost );
 
 	}
 
@@ -66,8 +68,12 @@ public class Map : MonoBehaviour {
 //		Spawner.instance.SpawnPrefabInDiamondGrid( "Tile", new Vector2( 0, 0 ), 3, Globals.TileHost );
 
 		// Spawning the Cursor once the map has been formed
-		Spawner.instance.SpawnPrefabAtCoords( "Cursor", new Vector2( 0, 0 ), 0, 0, 0.5f );
-		Spawner.instance.SpawnPrefabAtCoords( "Player", new Vector2( 0, 0 ), 0, 0, 1f );
+		Spawner.instance.SpawnPrefabAtCoords( "Cursor", Vector2.zero, 0.5f );
+		Spawner.instance.SpawnPrefabAtCoords( "Player", new Vector2( -1, 0 ), PlayerHost.instance.transform.gameObject );
+		Spawner.instance.SpawnPrefabAtCoords( "Player 2", new Vector2( 1, 0 ), PlayerHost.instance.transform.gameObject );
+		Spawner.instance.SpawnPrefabAtCoords( "Enemy", new Vector2( 0, 1 ), Globals.enemyHost );
+		Globals.Turn.characterTurn = true;
+		Globals.Turn.SetTurn(1);
 
 	}
 
@@ -79,12 +85,15 @@ public class Map : MonoBehaviour {
 
 		for ( int height = y; height > 0; height-- )
 		{
-			Spawner.instance.SpawnPrefabOnlyHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y + ( Globals.spriteHeight * height ) ), x, height, Globals.TileHost);
+			Spawner.instance.SpawnPrefabOnlyHorizontal( spawnString, new Vector2( this.transform.position.x, this.transform.position.y + height ), x, Globals.tileHost, true );
+//			Spawner.instance.SpawnPrefabOnlyHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y + ( Globals.spriteHeight * height ) ), x, height, Globals.TileHost);
 			// -height works here because it's used only to help set the co-ordinate of the spawned object, nothing more. It's not used in the calculation of anything.
-			Spawner.instance.SpawnPrefabOnlyHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y - ( Globals.spriteHeight * height ) ), x, -height, Globals.TileHost);
+			Spawner.instance.SpawnPrefabOnlyHorizontal( spawnString, new Vector2( this.transform.position.x, this.transform.position.y - height ), x, Globals.tileHost, true );
+//			Spawner.instance.SpawnPrefabOnlyHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y - ( Globals.spriteHeight * height ) ), x, -height, Globals.TileHost);
 		}
 		// Build the center Line
-		Spawner.instance.SpawnPrefabOnlyHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y ), x, 0, Globals.TileHost );
+		Spawner.instance.SpawnPrefabOnlyHorizontal( spawnString, new Vector2( this.transform.position.x, this.transform.position.y ), x, Globals.tileHost, true );
+//		Spawner.instance.SpawnPrefabOnlyHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y ), x, 0, Globals.TileHost );
 	}
 
 	// When x is odd and y is even
@@ -95,11 +104,14 @@ public class Map : MonoBehaviour {
 
 		for ( int width = x; width > 0; width-- )
 		{
-			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x + ( Globals.spriteWidth * width ), transform.position.y ), y - 1, y, width, Globals.TileHost );
-			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x - ( Globals.spriteWidth * width ), transform.position.y ), y - 1, y, -width, Globals.TileHost );
+			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( this.transform.position.x + width, this.transform.position.y ), y - 1, y, Globals.tileHost, true );
+//			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x + ( Globals.spriteWidth * width ), transform.position.y ), y - 1, y, width, Globals.TileHost );
+			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( this.transform.position.x - width, this.transform.position.y ), y - 1, y, Globals.tileHost, true );
+//			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x - ( Globals.spriteWidth * width ), transform.position.y ), y - 1, y, -width, Globals.TileHost );
 		}
 		// Build the center line
-		Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x, transform.position.y ), y - 1, y, 0, Globals.TileHost );
+		Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( this.transform.position.x, this.transform.position.y ), y - 1, y, Globals.tileHost, true );
+//		Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x, transform.position.y ), y - 1, y, 0, Globals.TileHost );
 	}
 
 	// When both are even
@@ -110,12 +122,15 @@ public class Map : MonoBehaviour {
 
 		for ( int left = x; left > 0; left-- )
 		{
-			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x - ( Globals.spriteWidth * left ), transform.position.y), y - 1, y, -left, Globals.TileHost );
+			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( this.transform.position.x - left, this.transform.position.y ), y - 1, y, Globals.tileHost, true );
+//			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x - ( Globals.spriteWidth * left ), transform.position.y), y - 1, y, -left, Globals.TileHost );
 		} for ( int right = x - 1; right > 0; right-- )
 		{
-			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x + ( Globals.spriteWidth * right ), transform.position.y), y - 1, y, right, Globals.TileHost );
+			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( this.transform.position.x + right, this.transform.position.y ), y - 1, y, Globals.tileHost, true );
+//			Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x + ( Globals.spriteWidth * right ), transform.position.y), y - 1, y, right, Globals.TileHost );
 		}
-		Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x, transform.position.y ), y - 1, y, 0, Globals.TileHost );
+		Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( this.transform.position.x, this.transform.position.y ), y - 1, y, Globals.tileHost, true );
+//		Spawner.instance.SpawnPrefabSomeVertical( spawnString, new Vector2( transform.position.x, transform.position.y ), y - 1, y, 0, Globals.TileHost );
 	}
 
 	// When x is even and y is odd
@@ -126,10 +141,13 @@ public class Map : MonoBehaviour {
 
 		for ( int height = y; height > 0; height-- )
 		{
-			Spawner.instance.SpawnPrefabSomeHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y + ( Globals.spriteHeight * height ) ), x - 1, x, height, Globals.TileHost );
-			Spawner.instance.SpawnPrefabSomeHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y - ( Globals.spriteHeight * height ) ), x - 1, x, -height, Globals.TileHost );
+			Spawner.instance.SpawnPrefabSomeHorizontal( spawnString, new Vector2( this.transform.position.x, this.transform.position.y + height ), x - 1, x, Globals.tileHost, true );
+//			Spawner.instance.SpawnPrefabSomeHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y + ( Globals.spriteHeight * height ) ), x - 1, x, height, Globals.TileHost );
+			Spawner.instance.SpawnPrefabSomeHorizontal( spawnString, new Vector2( this.transform.position.x, this.transform.position.y - height ), x - 1, x, Globals.tileHost, true );
+//			Spawner.instance.SpawnPrefabSomeHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y - ( Globals.spriteHeight * height ) ), x - 1, x, -height, Globals.TileHost );
 		}
-		Spawner.instance.SpawnPrefabSomeHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y ), x - 1, x, 0, Globals.TileHost );
+		Spawner.instance.SpawnPrefabSomeHorizontal( spawnString, new Vector2( this.transform.position.x, this.transform.position.y ), x - 1, x, Globals.tileHost, true );
+//		Spawner.instance.SpawnPrefabSomeHorizontal( spawnString, new Vector2( transform.position.x, transform.position.y ), x - 1, x, 0, Globals.TileHost );
 	}
 
 	private bool IsEven( int num )

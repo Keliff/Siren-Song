@@ -9,16 +9,34 @@ public class NewMap : MonoBehaviour {
 
 	public InputField xInput;
 	public InputField yInput;
+
+	public InputManager im;
 	
 	// This is the onEndEdit method for yInput, as that is who this script will attach to
 	public void OnEndEdit()
 	{
+		// "" is what the InputField.text value has if the user has entered nothing.
+		if ( xInput.text == "" )
+			return;
+		if ( yInput.text == "" )
+			return;
+
 		int xNum = int.Parse( xInput.text );
 		int yNum = int.Parse( yInput.text );
 		
 		Map.instance.CreateBlankMap( "Tile", xNum, yNum );
 
 		Destroy( canvas );
+	}
+
+	private void OnEnable()
+	{
+		im.enabled = true;
+	}
+
+	private void OnDisable()
+	{
+		im.enabled = false;
 	}
 	
 	/**

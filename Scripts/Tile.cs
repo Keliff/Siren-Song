@@ -41,10 +41,15 @@ public class Tile : MonoBehaviour, IClickable, IHover {
 	#region IHover implementation
 	public void OnMouseEnter ()
 	{
-		if ( Cursor.instance.coords != this.coords )
+
+		// If no movement grid is currently spawned
+		if ( !Globals.moveGridSpawned )
 		{
-			Cursor.instance.gameObject.transform.position = this.gameObject.transform.position;
-			Cursor.instance.coords = this.coords;
+			if ( Cursor.instance.coords != this.coords )
+			{
+				Cursor.instance.gameObject.transform.position = this.gameObject.transform.position;
+				Cursor.instance.coords = this.coords;
+			}
 		}
 	}
 	public void OnMouseExit ()

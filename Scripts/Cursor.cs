@@ -21,6 +21,8 @@ public class Cursor : MonoBehaviour {
 		}
 	}
 	private bool moved;
+	LayerMask onMap;
+	int mask;
 
 	private void Awake()
 	{
@@ -28,10 +30,16 @@ public class Cursor : MonoBehaviour {
 			instance = this;
 
 		moved = true;
+
+		onMap = LayerMask.NameToLayer( "OnMap" );
+		onMap = ~onMap;
+
+		mask = 1 << 8;
 	}
 
 	private void Update()
 	{
+//		Debug.Log(moved);
 		if ( moved )
 		{
 			// Left
@@ -60,12 +68,14 @@ public class Cursor : MonoBehaviour {
 			{
 				UpdatePosition( Globals.SOUTH );
 			}
+			// Affirmative
+			else if ( Input.GetKeyDown( Globals.Controls.cursorAffirmativeMain ) || Input.GetKeyDown( Globals.Controls.cursorAffirmativeSecondary ) )
+			{
+//				Debug.Log("Click");
+				AnalyzeUnderCursor();
+			}
 		}
-		// Affirmative
-		else if ( Input.GetKey( Globals.Controls.cursorAffirmativeMain ) || Input.GetKey( Globals.Controls.cursorAffirmativeSecondary ) )
-		{
-			
-		}
+
 	}
 
 	/**
@@ -73,14 +83,23 @@ public class Cursor : MonoBehaviour {
 	 * */
 	private void OnMouseDown()
 	{
-		RaycastHit2D[] hit = Physics2D.RaycastAll( this.transform.position, Vector2.up );
+		AnalyzeUnderCursor();
 
-		if ( hit[1].collider != null )
+	}
+
+	private void AnalyzeUnderCursor()
+	{
+		// TODO: I set this to Vector2.zero to fix a bug, I don't know if it will have unintended consequences with my raycasting in the future
+		RaycastHit2D[] hit = Physics2D.RaycastAll( this.transform.position, Vector2.zero, 2f, mask );
+
+		if ( hit.Length == 0 )
+			return;
+
+		if ( hit[0].collider != null )
 		{
-//			print(hit[1].collider.gameObject.name);
-			AnalyzeRayClass( hit[1].collider.gameObject );
+			//			print(hit[1].collider.gameObject.name);
+			AnalyzeRayClass( hit[0].collider.gameObject );
 		}
-
 	}
 
 	/**
@@ -91,19 +110,29 @@ public class Cursor : MonoBehaviour {
 	private void AnalyzeRayClass( GameObject hitObject )
 	{
 		// this method takes in the string of the object hit, determining if gameobject has an IClickable method attached to it
-		string name = hitObject.name;
+		string tag = hitObject.tag;
 		// I need to adjust the name to be a valid switch state expression. Meaning I need to analyze it, and take off the (clone) bit
-		name = RemoveClone( name );
+//		tag = RemoveClone( tag );
 
-		switch( name )
+		switch( tag )
 		{
 			case "Player":
 				Player playerScript = hitObject.GetComponent<Player>();
-				playerScript.OnMouseClick();
+				if ( !playerScript.moveGridSpawned )
+					playerScript.OnMouseClick();
+				else
+					return;
 				break;
+			// TODO: Make something happen when you click enemies
+			case "Enemy":
+				break;
+			case "MoveTile":
+				MovementGrid moveScript = hitObject.GetComponent<MovementGrid>();
+				moveScript.OnMouseClick();
+			break;
 			default:
 				Debug.Log("AnalyzeRayClass was given an object that did not implement the IClickable interface.");
-				Debug.Log("It was given: " + name);
+				Debug.Log("It was given: " + tag);
 				break;
 		}
 	}
@@ -126,10 +155,19 @@ public class Cursor : MonoBehaviour {
 	{
 		checkVector = new Vector2( this.coords.x + direction.x, this.coords.y + direction.y );
 
-		if ( Globals.TileList.ContainsKey( checkVector ) )
-			return true;
-		else
-			return false;
+		// If a movement grid is spawned, check to see if there's a movement grid at that position
+		if ( Globals.moveGridSpawned )
+		{
+			if ( Globals.moveGridList.ContainsKey( checkVector ) )
+				return true;
+			else
+				return false;
+		} else { // Otherwise just check for a regular tile at that position
+			if ( Globals.tileList.ContainsKey( checkVector ) )
+				return true;
+			else
+				return false;
+		}
 	}
 
 	private void UpdatePosition( Vector2 direction )
@@ -139,7 +177,7 @@ public class Cursor : MonoBehaviour {
 		if ( CheckMovement( direction, out checkVector ) )
 		{
 			// Update cursor position
-			this.gameObject.transform.position = Globals.TileList[ checkVector ].transform.position;
+			this.gameObject.transform.position = Globals.tileList[ checkVector ].transform.position;
 			this.coords = checkVector;
 		}
 	}
